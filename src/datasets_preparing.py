@@ -28,6 +28,7 @@ from pylab import text
 import csv
 from PIL import Image
 from skimage.transform import resize
+from collections import Counter
 
 
 # Defining function for loading dataset from 'pickle' file
@@ -618,3 +619,185 @@ def preprocess_data(d, shuffle=False, lhe=False, norm_255=False, mean_norm=False
 
 # <---------->
 # Option 2 - grayscale data --> ends here
+
+
+# <---------->
+# Option 3 - Joon's grayscale data with SMOTE and ADASYN --> starts here
+    
+def equalize_training_dataset_with_SMOTE(x_train, y_train):
+    from imblearn.over_sampling import SMOTE
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = SMOTE(sampling_strategy='not majority', n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_BorderlineSMOTE(x_train, y_train):
+    from imblearn.over_sampling import BorderlineSMOTE
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = BorderlineSMOTE(sampling_strategy='not majority', n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_KMeansSMOTE(x_train, y_train):
+    from imblearn.over_sampling import KMeansSMOTE
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = KMeansSMOTE(sampling_strategy='not majority', n_jobs=8, cluster_balance_threshold=0.009).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_SMOTENC(x_train, y_train):
+    from imblearn.over_sampling import SMOTENC
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = SMOTENC(sampling_strategy='not majority', n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_SVMSMOTE(x_train, y_train):
+    from imblearn.over_sampling import SVMSMOTE
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = SVMSMOTE(sampling_strategy='not majority', n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_ADASYN(x_train, y_train):
+    from imblearn.over_sampling import ADASYN
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = ADASYN(sampling_strategy='not majority', n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+# Defining function for converting data to grayscale
+def rgb_to_gray_data2(x_data):
+    # Preparing zero valued array for storing GrayScale images with only one channel
+    x_g = np.zeros((x_data.shape[0], 32, 32, 1))
+
+    # Converting RGB images into GrayScale images
+    # Using formula:
+    # Y' = 0.299 R + 0.587 G + 0.114 B
+    x_g[:, :, :, 0] = x_data[:, :, :, 0] * 0.299 + x_data[:, :, :, 1] * 0.587 + x_data[:, :, :, 2] * 0.114
+
+    # Also, possible to do with OpenCV
+    # cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+    # Returning ready data
+    return x_g.transpose(0,3,1,2)
+
+def save_gray(data, filename):
+    # Converting rgb data to grayscale for training dataset
+    x_train = rgb_to_gray_data2(data['x_train'])
+
+    # Converting rgb data to grayscale for validation dataset
+    x_validation = rgb_to_gray_data2(data['x_validation'])
+
+    # Converting rgb data to grayscale for testing dataset
+    x_test = rgb_to_gray_data2(data['x_test'])
+    
+    # Putting loaded data into the dictionary
+    d_loaded_gray = {'x_train': x_train, 'y_train': data['y_train'],
+                     'x_validation': x_validation, 'y_validation': data['y_validation'],
+                     'x_test': x_test, 'y_test': data['y_test'],
+                     'labels': data['labels']}
+    
+    # Applying preprocessing
+    data_after = preprocess_data(d_loaded_gray, shuffle=True, transpose=True, colour='gray', lhe=True, norm_255=True, mean_norm=True, std_norm=True)
+    
+    # Showing the image by using obtained array with only one channel
+    # Pay attention that when we use only one channeled array of image
+    # We need to use (32, 32) and not (32, 32, 1) to show with 'plt.imshow'
+    print('Sample Images')
+    for i in range(10):
+        plt.imshow(x_train[i, 0, :, :].astype(np.uint8), cmap=plt.get_cmap('gray'))
+        plt.show()
+        
+    # Saving loaded and preprocessed data into 'pickle' file
+    with open(filename, 'wb') as f:
+        pickle.dump(data_after, f)
+    # Releasing memory
+    del data_after
+
+def makeCustomOverSampling(method, name):
+    print('START ' + name + ' oversampling')
+    # Loading rgb data from training dataset
+    x_train, y_train, s_train, c_train = load_rgb_data('train.pickle')
+    
+    # Loading rgb data from validation dataset
+    x_validation, y_validation, s_validation, c_validation = load_rgb_data('valid.pickle')
+    
+    # Loading rgb data from test dataset
+    x_test, y_test, s_test, c_test = load_rgb_data('test.pickle')
+    
+    # Getting texts for every class
+    label_list = label_text('label_names.csv')
+    
+    # origianl distribution
+    print(sorted(Counter(y_train).items()))
+    
+    # Implementing equalization of training dataset
+    # use imblearn to equalize dataset
+    x_new, y_new = method(x_train.astype(np.uint8), y_train)
+    
+    # Putting loaded and equalized data into the dictionary
+    # Equalization is done only for training dataset
+    d_new = {'x_train': x_new, 'y_train': y_new,
+                'x_validation': x_validation, 'y_validation': y_validation,
+                'x_test': x_test, 'y_test': y_test,
+                'labels': label_list}
+    
+    save_gray(d_new, name + '.pickle')
+    del d_new
+
+makeCustomOverSampling(equalize_training_dataset_with_SMOTE, 'SMOTE')
+makeCustomOverSampling(equalize_training_dataset_with_BorderlineSMOTE, 'BorderlineSMOTE')
+makeCustomOverSampling(equalize_training_dataset_with_KMeansSMOTE, 'KMeansSMOTE')
+# cannot use SMOTENC because dataset has no categorical features
+#makeCustomOverSampling(equalize_training_dataset_with_SMOTENC, 'SMOTENC')
+# cannot use SVMSMOTE because it hangs on my computer even after an hour. don't know why...machine power is not enough??
+#makeCustomOverSampling(equalize_training_dataset_with_SVMSMOTE, 'SVMSMOTE')
+# cannot use ADASYN. I need more information about why it cannot be apllied to the dataset
+#makeCustomOverSampling(equalize_training_dataset_with_ADASYN, 'ADASYN')
+
+
+# <---------->
+# Option 3 - Joon's grayscale data with SMOTE and ADASYN --> ends here
