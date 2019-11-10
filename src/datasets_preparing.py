@@ -28,6 +28,7 @@ from pylab import text
 import csv
 from PIL import Image
 from skimage.transform import resize
+from collections import Counter
 
 
 # Defining function for loading dataset from 'pickle' file
@@ -618,3 +619,364 @@ def preprocess_data(d, shuffle=False, lhe=False, norm_255=False, mean_norm=False
 
 # <---------->
 # Option 2 - grayscale data --> ends here
+
+
+# <---------->
+# Option 3 - Joon's grayscale data with SMOTE and ADASYN --> starts here
+
+# --------------------
+# oversampling methods
+# --------------------
+def equalize_training_dataset_with_SMOTE(x_train, y_train):
+    from imblearn.over_sampling import SMOTE
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = SMOTE(sampling_strategy='not majority', n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_BorderlineSMOTE(x_train, y_train):
+    from imblearn.over_sampling import BorderlineSMOTE
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = BorderlineSMOTE(sampling_strategy='not majority', n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_KMeansSMOTE(x_train, y_train):
+    from imblearn.over_sampling import KMeansSMOTE
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = KMeansSMOTE(sampling_strategy='not majority', n_jobs=8, cluster_balance_threshold=0.009).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_SMOTENC(x_train, y_train):
+    from imblearn.over_sampling import SMOTENC
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = SMOTENC(sampling_strategy='not majority', n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_SVMSMOTE(x_train, y_train):
+    from imblearn.over_sampling import SVMSMOTE
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = SVMSMOTE(sampling_strategy='not majority', n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_ADASYN(x_train, y_train):
+    from imblearn.over_sampling import ADASYN
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = ADASYN(sampling_strategy='not majority', n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+# ---------------------
+# undersampling methods
+# ---------------------
+def equalize_training_dataset_with_ClusterCentroids(x_train, y_train):
+    from imblearn.under_sampling import ClusterCentroids
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = ClusterCentroids(sampling_strategy='not minority', n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_CondensedNN(x_train, y_train):
+    from imblearn.under_sampling import CondensedNearestNeighbour
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = CondensedNearestNeighbour(sampling_strategy={i : 180 for i in range(0, 43)}, n_neighbors=5, n_jobs=8).fit_resample(x_tmp, y_train)
+#    x_resampled, y_resampled = CondensedNearestNeighbour(sampling_strategy='not minority', n_neighbors=5, n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_EditedNN(x_train, y_train):
+    from imblearn.under_sampling import EditedNearestNeighbours
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = EditedNearestNeighbours(sampling_strategy='not minority', n_neighbors=5, n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_RepeatedEditedNN(x_train, y_train):
+    from imblearn.under_sampling import RepeatedEditedNearestNeighbours
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = RepeatedEditedNearestNeighbours(sampling_strategy='not minority', n_neighbors=5, n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_AllKNN(x_train, y_train):
+    from imblearn.under_sampling import AllKNN
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = AllKNN(sampling_strategy='not minority', n_neighbors=5, n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_InstHardThres(x_train, y_train):
+    from imblearn.under_sampling import InstanceHardnessThreshold
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = InstanceHardnessThreshold(sampling_strategy={i : 180 for i in range(0, 43)}, n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_NearMiss(x_train, y_train):
+    from imblearn.under_sampling import NearMiss
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = NearMiss(sampling_strategy={i : 180 for i in range(0, 43)}, version=1, n_neighbors=5, n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_NClearningRule(x_train, y_train):
+    from imblearn.under_sampling import NeighbourhoodCleaningRule
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = NeighbourhoodCleaningRule(sampling_strategy={i : 180 for i in range(0, 43)}, n_neighbors=5, n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_OneSidedSel(x_train, y_train):
+    from imblearn.under_sampling import OneSidedSelection
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = OneSidedSelection(sampling_strategy={i : 180 for i in range(0, 43)}, n_seeds_S=5, n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_RandUnderSampler(x_train, y_train):
+    from imblearn.under_sampling import RandomUnderSampler
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = RandomUnderSampler(sampling_strategy='not minority').fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+def equalize_training_dataset_with_TomekLinks(x_train, y_train):
+    from imblearn.under_sampling import TomekLinks
+
+    old_shape = list(x_train.shape)
+    # reshape before using SMOTE
+    x_tmp = np.reshape(x_train, (x_train.shape[0], -1))
+    x_resampled, y_resampled = TomekLinks(sampling_strategy={i : 180 for i in range(0, 43)}, n_jobs=8).fit_resample(x_tmp, y_train)
+    print(sorted(Counter(y_resampled).items()))
+    # reshape after using SMOTE
+    old_shape[0] = x_resampled.shape[0]
+    x_resampled = np.reshape(x_resampled, tuple(old_shape))
+    
+    return x_resampled, y_resampled
+
+# Defining function for converting data to grayscale
+def rgb_to_gray_data2(x_data):
+    # Preparing zero valued array for storing GrayScale images with only one channel
+    x_g = np.zeros((x_data.shape[0], 32, 32, 1))
+
+    # Converting RGB images into GrayScale images
+    # Using formula:
+    # Y' = 0.299 R + 0.587 G + 0.114 B
+    x_g[:, :, :, 0] = x_data[:, :, :, 0] * 0.299 + x_data[:, :, :, 1] * 0.587 + x_data[:, :, :, 2] * 0.114
+
+    # Also, possible to do with OpenCV
+    # cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+    # Returning ready data
+    return x_g.transpose(0,3,1,2)
+
+def save_gray(data, filename):
+    # Converting rgb data to grayscale for training dataset
+    x_train = rgb_to_gray_data2(data['x_train'])
+
+    # Converting rgb data to grayscale for validation dataset
+    x_validation = rgb_to_gray_data2(data['x_validation'])
+
+    # Converting rgb data to grayscale for testing dataset
+    x_test = rgb_to_gray_data2(data['x_test'])
+    
+    # Putting loaded data into the dictionary
+    d_loaded_gray = {'x_train': x_train, 'y_train': data['y_train'],
+                     'x_validation': x_validation, 'y_validation': data['y_validation'],
+                     'x_test': x_test, 'y_test': data['y_test'],
+                     'labels': data['labels']}
+    
+    # Applying preprocessing
+    data_after = preprocess_data(d_loaded_gray, shuffle=True, transpose=True, colour='gray', lhe=True, norm_255=True, mean_norm=True, std_norm=True)
+    
+    # Showing the image by using obtained array with only one channel
+    # Pay attention that when we use only one channeled array of image
+    # We need to use (32, 32) and not (32, 32, 1) to show with 'plt.imshow'
+    print('Sample Images')
+    for i in range(10):
+        plt.imshow(x_train[i, 0, :, :].astype(np.uint8), cmap=plt.get_cmap('gray'))
+        plt.show()
+        
+    # Saving loaded and preprocessed data into 'pickle' file
+    with open(filename, 'wb') as f:
+        pickle.dump(data_after, f)
+    # Releasing memory
+    del data_after
+
+def makeCustomSampling(method, name):
+    print('START ' + name + ' over/under sampling')
+    # Loading rgb data from training dataset
+    x_train, y_train, s_train, c_train = load_rgb_data('train.pickle')
+    
+    # Loading rgb data from validation dataset
+    x_validation, y_validation, s_validation, c_validation = load_rgb_data('valid.pickle')
+    
+    # Loading rgb data from test dataset
+    x_test, y_test, s_test, c_test = load_rgb_data('test.pickle')
+    
+    # Getting texts for every class
+    label_list = label_text('label_names.csv')
+    
+    # origianl distribution
+    print(sorted(Counter(y_train).items()))
+    
+    # Implementing equalization of training dataset
+    # use imblearn to equalize dataset
+    x_new, y_new = method(x_train.astype(np.uint8), y_train)
+    
+    # Putting loaded and equalized data into the dictionary
+    # Equalization is done only for training dataset
+    d_new = {'x_train': x_new, 'y_train': y_new,
+                'x_validation': x_validation, 'y_validation': y_validation,
+                'x_test': x_test, 'y_test': y_test,
+                'labels': label_list}
+    
+    save_gray(d_new, name + '.pickle')
+    del d_new
+
+# make oversampling with given methods
+makeCustomSampling(equalize_training_dataset_with_SMOTE, 'SMOTE')
+makeCustomSampling(equalize_training_dataset_with_BorderlineSMOTE, 'BorderlineSMOTE')
+makeCustomSampling(equalize_training_dataset_with_KMeansSMOTE, 'KMeansSMOTE')
+
+# cannot use SMOTENC because dataset has no categorical features
+#makeCustomSampling(equalize_training_dataset_with_SMOTENC, 'SMOTENC')
+# cannot use SVMSMOTE because it hangs on my computer even after an hour. don't know why...machine power is not enough??
+#makeCustomSampling(equalize_training_dataset_with_SVMSMOTE, 'SVMSMOTE')
+# cannot use ADASYN. I need more information about why it cannot be apllied to the dataset
+#makeCustomSampling(equalize_training_dataset_with_ADASYN, 'ADASYN')
+
+# make undersampling with given methods
+makeCustomSampling(equalize_training_dataset_with_ClusterCentroids, 'ClusterCentroids')
+makeCustomSampling(equalize_training_dataset_with_NearMiss, 'NearMiss')
+makeCustomSampling(equalize_training_dataset_with_RandUnderSampler, 'RandUnderSampler')
+# # of samples are almost same but not equal.
+makeCustomSampling(equalize_training_dataset_with_InstHardThres, 'InstHardThres')
+
+
+# those methods make # of samples not be equal to each other. So I skipped these methods.
+#makeCustomSampling(equalize_training_dataset_with_CondensedNN, 'CondensedNN')
+#makeCustomSampling(equalize_training_dataset_with_EditedNN, 'EditedNN')
+#makeCustomSampling(equalize_training_dataset_with_RepeatedEditedNN, 'RepeatedEditedNN')
+#makeCustomSampling(equalize_training_dataset_with_AllKNN, 'AllKNN')
+#makeCustomSampling(equalize_training_dataset_with_NClearningRule, 'NClearningRule')
+#makeCustomSampling(equalize_training_dataset_with_OneSidedSel, 'OneSidedSel')
+#makeCustomSampling(equalize_training_dataset_with_TomekLinks, 'TomekLinks')
+
+# <---------->
+# Option 3 - Joon's grayscale data with SMOTE and ADASYN --> ends here
