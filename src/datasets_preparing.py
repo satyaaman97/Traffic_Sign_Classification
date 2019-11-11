@@ -24,12 +24,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 from tqdm import tqdm
-from pylab import text
+#from pylab import text
 import csv
-from PIL import Image
-from skimage.transform import resize
+#from PIL import Image
+#from skimage.transform import resize
 from collections import Counter
 
+useNormalize = False
 
 # Defining function for loading dataset from 'pickle' file
 def load_rgb_data(file):
@@ -902,16 +903,21 @@ def save_gray(data, filename):
                      'labels': data['labels']}
     
     # Applying preprocessing
-    data_after = preprocess_data(d_loaded_gray, shuffle=True, transpose=True, colour='gray', lhe=True, norm_255=True, mean_norm=True, std_norm=True)
+    if useNormalize:
+        data_after = preprocess_data(d_loaded_gray, shuffle=True, transpose=False, colour='gray', lhe=True, norm_255=True, mean_norm=True, std_norm=True)
+    else:
+        data_after = preprocess_data(d_loaded_gray, shuffle=True, transpose=False, colour='gray', lhe=True)
     
     # Showing the image by using obtained array with only one channel
     # Pay attention that when we use only one channeled array of image
     # We need to use (32, 32) and not (32, 32, 1) to show with 'plt.imshow'
     print('Sample Images')
     for i in range(10):
-        plt.imshow(x_train[i, 0, :, :].astype(np.uint8), cmap=plt.get_cmap('gray'))
+        plt.imshow(data_after['x_train'][i, 0, :, :].astype(np.uint8), cmap=plt.get_cmap('gray'))
         plt.show()
-        
+#    print(data_after['x_train'][0,0,:,:])
+    print('Final shape of dataset: ', data_after['x_train'].shape)
+    
     # Saving loaded and preprocessed data into 'pickle' file
     with open(filename, 'wb') as f:
         pickle.dump(data_after, f)
@@ -949,6 +955,71 @@ def makeCustomSampling(method, name):
     save_gray(d_new, name + '.pickle')
     del d_new
 
+def makeCustomSampling2(method, name):
+    print('START ' + name + ' over/under sampling')
+    # Loading rgb data from training dataset
+    x_train, y_train, s_train, c_train = load_rgb_data('train.pickle')
+    
+    # Loading rgb data from validation dataset
+    x_validation, y_validation, s_validation, c_validation = load_rgb_data('valid.pickle')
+    
+    # Loading rgb data from test dataset
+    x_test, y_test, s_test, c_test = load_rgb_data('test.pickle')
+    
+    # Getting texts for every class
+    label_list = label_text('label_names.csv')
+    
+    # origianl distribution
+    print(sorted(Counter(y_train).items()))
+
+    # Converting rgb data to grayscale for training dataset
+    x_train = rgb_to_gray_data2(x_train)
+
+    # Converting rgb data to grayscale for validation dataset
+    x_validation = rgb_to_gray_data2(x_validation)
+
+    # Converting rgb data to grayscale for testing dataset
+    x_test = rgb_to_gray_data2(x_test)
+
+    d_gray = {'x_train': x_train, 'y_train': y_train,
+                'x_validation': x_validation, 'y_validation': y_validation,
+                'x_test': x_test, 'y_test': y_test,
+                'labels': label_list}
+
+    # Applying preprocessing
+    if useNormalize:
+        data_after = preprocess_data(d_gray, transpose=False, colour='gray', lhe=True, norm_255=True, mean_norm=True, std_norm=True)
+    else:
+        data_after = preprocess_data(d_gray, transpose=False, colour='gray', lhe=True)
+
+    # Implementing equalization of training dataset
+    # use imblearn to equalize dataset
+    data_after['x_train'], data_after['y_train'] = method(data_after['x_train'].astype(np.uint8), data_after['y_train'])
+
+    data_new = preprocess_data(data_after, shuffle=True, transpose=False)
+    
+    # Showing the image by using obtained array with only one channel
+    # Pay attention that when we use only one channeled array of image
+    # We need to use (32, 32) and not (32, 32, 1) to show with 'plt.imshow'
+    print('Sample Images')
+    
+    for i in range(10):
+        plt.imshow(data_new['x_train'][i, 0, :, :].astype(np.uint8), cmap=plt.get_cmap('gray'))
+        plt.show()
+    
+    print('Final shape of dataset: ', data_new['x_train'].shape)
+    
+    # Saving loaded and preprocessed data into 'pickle' file
+    with open(name, 'wb') as f:
+        pickle.dump(data_new, f)
+    # Releasing memory
+    del data_new
+    del data_after
+    del d_gray
+
+# normalize flag. if set it True, sample image is not correctly showed.
+useNormalize = False
+
 # make oversampling with given methods
 makeCustomSampling(equalize_training_dataset_with_SMOTE, 'SMOTE')
 makeCustomSampling(equalize_training_dataset_with_BorderlineSMOTE, 'BorderlineSMOTE')
@@ -977,6 +1048,9 @@ makeCustomSampling(equalize_training_dataset_with_InstHardThres, 'InstHardThres'
 #makeCustomSampling(equalize_training_dataset_with_NClearningRule, 'NClearningRule')
 #makeCustomSampling(equalize_training_dataset_with_OneSidedSel, 'OneSidedSel')
 #makeCustomSampling(equalize_training_dataset_with_TomekLinks, 'TomekLinks')
+
+# makeCustomSampling2 applies normalization and standardization before over/under-sampling.
+#makeCustomSampling2(equalize_training_dataset_with_SMOTE, 'SMOTE')
 
 # <---------->
 # Option 3 - Joon's grayscale data with SMOTE and ADASYN --> ends here
