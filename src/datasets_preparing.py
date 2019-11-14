@@ -244,7 +244,7 @@ def preprocess_data(d, shuffle=False, lhe=False, norm_255=False, mean_norm=False
         # from sklearn.utils import shuffle
 
     # Applying Local Histogram Equalization
-    if lhe:
+    if lhe and colour != 'rgb':
         # Function map applies first argument to all elements of the second argument
         # First argument in our case is a function
         # Second argument in our case is np array
@@ -271,8 +271,8 @@ def preprocess_data(d, shuffle=False, lhe=False, norm_255=False, mean_norm=False
     if norm_255:
         # Normalizing whole data by dividing /255.0
         d['x_train'] = d['x_train'].astype(np.float32) / 255.0
-        d['x_validation'] /= 255.0
-        d['x_test'] /= 255.0
+        d['x_validation'] = d['x_validation'].astype(np.float32) / 255.0
+        d['x_test'] = d['x_test'].astype(np.float32) / 255.0
 
         # Preparing 'mean image'
         # Subtracting the dataset by 'mean image' serves to center the data
@@ -924,6 +924,45 @@ def save_gray(data, filename):
     # Releasing memory
     del data_after
 
+def save_rgb(data, filename):
+    # Converting rgb data to grayscale for training dataset
+    x_train = data['x_train'].transpose(0,3,1,2)
+
+    # Converting rgb data to grayscale for validation dataset
+    x_validation = data['x_validation'].transpose(0,3,1,2)
+
+    # Converting rgb data to grayscale for testing dataset
+    x_test = data['x_test'].transpose(0,3,1,2)
+    
+    # Putting loaded data into the dictionary
+    d_loaded_rgb = {'x_train': x_train, 'y_train': data['y_train'],
+                     'x_validation': x_validation, 'y_validation': data['y_validation'],
+                     'x_test': x_test, 'y_test': data['y_test'],
+                     'labels': data['labels']}
+    
+    # Applying preprocessing
+    if useNormalize:
+        data_after = preprocess_data(d_loaded_rgb, shuffle=True, transpose=False, lhe=False, norm_255=True, mean_norm=True, std_norm=True)
+    else:
+        data_after = preprocess_data(d_loaded_rgb, shuffle=True, transpose=False, lhe=False)
+    
+    # Showing the image by using obtained array with only one channel
+    # Pay attention that when we use only one channeled array of image
+    # We need to use (32, 32) and not (32, 32, 1) to show with 'plt.imshow'
+    print('Sample Images')
+    for i in range(10):
+        tmp_img = data_after['x_train'][i].transpose(1,2,0).astype(np.uint8)
+        plt.imshow(tmp_img)
+        plt.show()
+    print(data_after['x_train'][0,0,:,:])
+    print('Final shape of dataset: ', data_after['x_train'].shape)
+    
+    # Saving loaded and preprocessed data into 'pickle' file
+    with open(filename, 'wb') as f:
+        pickle.dump(data_after, f)
+    # Releasing memory
+    del data_after
+
 def makeCustomSampling(method, name):
     print('START ' + name + ' over/under sampling')
     # Loading rgb data from training dataset
@@ -1011,7 +1050,11 @@ def makeCustomSampling(method, name):
                 'x_test': x_test, 'y_test': y_test,
                 'labels': label_list}
     
-    save_gray(d_new, name + '.pickle')
+    if isGray:
+        save_gray(d_new, name + '_gray.pickle')
+    else:
+        save_rgb(d_new, name + '_rgb.pickle')
+
     del d_new
 
 def makeCustomSampling2(method, name):
@@ -1031,14 +1074,28 @@ def makeCustomSampling2(method, name):
     # origianl distribution
     print(sorted(Counter(y_train).items()))
 
-    # Converting rgb data to grayscale for training dataset
-    x_train = rgb_to_gray_data2(x_train)
-
-    # Converting rgb data to grayscale for validation dataset
-    x_validation = rgb_to_gray_data2(x_validation)
-
-    # Converting rgb data to grayscale for testing dataset
-    x_test = rgb_to_gray_data2(x_test)
+    if isGray:
+        name = name + '_gray'
+        col = 'gray'
+        # Converting rgb data to grayscale for training dataset
+        x_train = rgb_to_gray_data2(x_train)
+    
+        # Converting rgb data to grayscale for validation dataset
+        x_validation = rgb_to_gray_data2(x_validation)
+    
+        # Converting rgb data to grayscale for testing dataset
+        x_test = rgb_to_gray_data2(x_test)
+    else:
+        name = name + '_rgb'
+        col = 'rgb'
+        # Converting rgb data to grayscale for training dataset
+        x_train = x_train.transpose(0,3,1,2)
+    
+        # Converting rgb data to grayscale for validation dataset
+        x_validation = x_validation.transpose(0,3,1,2)
+    
+        # Converting rgb data to grayscale for testing dataset
+        x_test = x_test.transpose(0,3,1,2)
 
     d_gray = {'x_train': x_train, 'y_train': y_train,
                 'x_validation': x_validation, 'y_validation': y_validation,
@@ -1047,9 +1104,9 @@ def makeCustomSampling2(method, name):
 
     # Applying preprocessing
     if useNormalize:
-        data_after = preprocess_data(d_gray, transpose=False, colour='gray', lhe=True, norm_255=True, mean_norm=True, std_norm=True)
+        data_after = preprocess_data(d_gray, transpose=False, colour=col, lhe=isGray, norm_255=True, mean_norm=True, std_norm=True)
     else:
-        data_after = preprocess_data(d_gray, transpose=False, colour='gray', lhe=True)
+        data_after = preprocess_data(d_gray, transpose=False, colour=col, lhe=isGray)
 
     # Implementing equalization of training dataset
     # use imblearn to equalize dataset
@@ -1063,7 +1120,11 @@ def makeCustomSampling2(method, name):
     print('Sample Images')
     
     for i in range(10):
-        plt.imshow(data_new['x_train'][i, 0, :, :].astype(np.uint8), cmap=plt.get_cmap('gray'))
+        if isGray:
+            plt.imshow(data_new['x_train'][i, 0, :, :].astype(np.uint8), cmap=plt.get_cmap('gray'))
+        else:
+            tmp_img = data_after['x_train'][i].transpose(1,2,0).astype(np.uint8)
+            plt.imshow(tmp_img)
         plt.show()
     
     print('Final shape of dataset: ', data_new['x_train'].shape)
@@ -1078,7 +1139,10 @@ def makeCustomSampling2(method, name):
 
 # normalize flag. if set it True, sample image is not correctly showed.
 useNormalize = False
+# toySet flag. if set it True, toySet will be generated.
 toySet = False
+# grayscale flag. if set it True, all image turns into the grayscale
+isGray = False
 
 if toySet:
     useNormalize = False
@@ -1088,8 +1152,8 @@ if toySet:
 
 # make oversampling with given methods
 makeCustomSampling(equalize_training_dataset_with_SMOTE, 'SMOTE')
-#makeCustomSampling(equalize_training_dataset_with_BorderlineSMOTE, 'BorderlineSMOTE')
-#makeCustomSampling(equalize_training_dataset_with_KMeansSMOTE, 'KMeansSMOTE')
+makeCustomSampling(equalize_training_dataset_with_BorderlineSMOTE, 'BorderlineSMOTE')
+makeCustomSampling(equalize_training_dataset_with_KMeansSMOTE, 'KMeansSMOTE')
 
 # cannot use SMOTENC because dataset has no categorical features
 #makeCustomSampling(equalize_training_dataset_with_SMOTENC, 'SMOTENC')
@@ -1099,11 +1163,11 @@ makeCustomSampling(equalize_training_dataset_with_SMOTE, 'SMOTE')
 #makeCustomSampling(equalize_training_dataset_with_ADASYN, 'ADASYN')
 
 # make undersampling with given methods
-#makeCustomSampling(equalize_training_dataset_with_ClusterCentroids, 'ClusterCentroids')
-#makeCustomSampling(equalize_training_dataset_with_NearMiss, 'NearMiss')
-#makeCustomSampling(equalize_training_dataset_with_RandUnderSampler, 'RandUnderSampler')
-## # of samples are almost same but not equal.
-#makeCustomSampling(equalize_training_dataset_with_InstHardThres, 'InstHardThres')
+makeCustomSampling(equalize_training_dataset_with_ClusterCentroids, 'ClusterCentroids')
+makeCustomSampling(equalize_training_dataset_with_NearMiss, 'NearMiss')
+makeCustomSampling(equalize_training_dataset_with_RandUnderSampler, 'RandUnderSampler')
+# # of samples are almost same but not equal.
+makeCustomSampling(equalize_training_dataset_with_InstHardThres, 'InstHardThres')
 
 
 # those methods make # of samples not be equal to each other. So I skipped these methods.

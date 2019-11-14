@@ -9,7 +9,10 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-file = 'ToySet1.pickle'
+# flag for grayscale
+isGray = False
+file = 'ToySet1_rgb.pickle'
+
 # Opening 'pickle' file and getting images
 with open(file, 'rb') as f:
     d = pickle.load(f, encoding='latin1')  # dictionary type, we use 'latin1' for python3
@@ -24,8 +27,13 @@ with open(file, 'rb') as f:
 
 print('Sample Images')
 
+
 for i in range(10):
-    plt.imshow(x_train[i, 0, :, :].astype(np.uint8), cmap=plt.get_cmap('gray'))
+    if isGray:
+        plt.imshow(x_train[i, 0, :, :].astype(np.uint8), cmap=plt.get_cmap('gray'))
+    else:
+        tmp_img = x_train[i].transpose(1,2,0).astype(np.uint8)
+        plt.imshow(tmp_img)
     plt.show()
 
 print('x_train.shape: ', x_train.shape)
