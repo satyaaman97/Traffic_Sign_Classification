@@ -915,7 +915,7 @@ def save_gray(data, filename):
     for i in range(10):
         plt.imshow(data_after['x_train'][i, 0, :, :].astype(np.uint8), cmap=plt.get_cmap('gray'))
         plt.show()
-#    print(data_after['x_train'][0,0,:,:])
+    print(data_after['x_train'][0,0,:,:])
     print('Final shape of dataset: ', data_after['x_train'].shape)
     
     # Saving loaded and preprocessed data into 'pickle' file
@@ -939,7 +939,66 @@ def makeCustomSampling(method, name):
     label_list = label_text('label_names.csv')
     
     # origianl distribution
-    print(sorted(Counter(y_train).items()))
+    print(sorted(Counter(y_train).items())) # 180~2110
+    print(sorted(Counter(y_validation).items())) # 30~240
+    print(sorted(Counter(y_test).items())) # 60~750
+
+    # if toySet flag is true, make toy dataset with 540 samples with 3 classes
+    if toySet:
+        j = 0
+        x_train2 = np.zeros((540,32,32,3), np.uint8)
+        y_train2 = np.zeros(540, np.uint8)
+        for i in range(y_train.shape[0]):
+            if y_train[i] in (0,19,37): # classes that have 180 samples
+                x_train2[j] = x_train[i]
+                if y_train[i] == 0:
+                    y_train2[j] = 0
+                elif y_train[i] == 19:
+                    y_train2[j] = 1
+                elif y_train[i] == 37:
+                    y_train2[j] = 2
+                j += 1
+        
+        j = 0
+        x_valid2 = np.zeros((90,32,32,3), np.uint8)
+        y_valid2 = np.zeros(90, np.uint8)
+        for i in range(y_validation.shape[0]):
+            if y_validation[i] in (0,19,37): # classes that have 180 samples
+                x_valid2[j] = x_validation[i]
+                if y_validation[i] == 0:
+                    y_valid2[j] = 0
+                elif y_validation[i] == 19:
+                    y_valid2[j] = 1
+                elif y_validation[i] == 37:
+                    y_valid2[j] = 2
+                j += 1
+
+        j = 0
+        x_test2 = np.zeros((180,32,32,3), np.uint8)
+        y_test2 = np.zeros(180, np.uint8)
+        for i in range(y_test.shape[0]):
+            if y_test[i] in (0,19,37): # classes that have 180 samples
+                x_test2[j] = x_test[i]
+                if y_test[i] == 0:
+                    y_test2[j] = 0
+                elif y_test[i] == 19:
+                    y_test2[j] = 1
+                elif y_test[i] == 37:
+                    y_test2[j] = 2
+                j += 1
+
+                
+        print('#ToySet#')
+        x_train = x_train2
+        y_train = y_train2
+        x_validation = x_valid2
+        y_validation= y_valid2
+        x_test = x_test2
+        y_test = y_test2
+        print(sorted(Counter(y_train).items()))
+        print(sorted(Counter(y_validation).items()))
+        print(sorted(Counter(y_test).items()))
+
     
     # Implementing equalization of training dataset
     # use imblearn to equalize dataset
@@ -1019,11 +1078,18 @@ def makeCustomSampling2(method, name):
 
 # normalize flag. if set it True, sample image is not correctly showed.
 useNormalize = False
+toySet = False
+
+if toySet:
+    useNormalize = False
+    makeCustomSampling(equalize_training_dataset_with_RandUnderSampler, 'ToySet1')
+    useNormalize = True
+    makeCustomSampling(equalize_training_dataset_with_RandUnderSampler, 'ToySet2')
 
 # make oversampling with given methods
 makeCustomSampling(equalize_training_dataset_with_SMOTE, 'SMOTE')
-makeCustomSampling(equalize_training_dataset_with_BorderlineSMOTE, 'BorderlineSMOTE')
-makeCustomSampling(equalize_training_dataset_with_KMeansSMOTE, 'KMeansSMOTE')
+#makeCustomSampling(equalize_training_dataset_with_BorderlineSMOTE, 'BorderlineSMOTE')
+#makeCustomSampling(equalize_training_dataset_with_KMeansSMOTE, 'KMeansSMOTE')
 
 # cannot use SMOTENC because dataset has no categorical features
 #makeCustomSampling(equalize_training_dataset_with_SMOTENC, 'SMOTENC')
@@ -1033,11 +1099,11 @@ makeCustomSampling(equalize_training_dataset_with_KMeansSMOTE, 'KMeansSMOTE')
 #makeCustomSampling(equalize_training_dataset_with_ADASYN, 'ADASYN')
 
 # make undersampling with given methods
-makeCustomSampling(equalize_training_dataset_with_ClusterCentroids, 'ClusterCentroids')
-makeCustomSampling(equalize_training_dataset_with_NearMiss, 'NearMiss')
-makeCustomSampling(equalize_training_dataset_with_RandUnderSampler, 'RandUnderSampler')
-# # of samples are almost same but not equal.
-makeCustomSampling(equalize_training_dataset_with_InstHardThres, 'InstHardThres')
+#makeCustomSampling(equalize_training_dataset_with_ClusterCentroids, 'ClusterCentroids')
+#makeCustomSampling(equalize_training_dataset_with_NearMiss, 'NearMiss')
+#makeCustomSampling(equalize_training_dataset_with_RandUnderSampler, 'RandUnderSampler')
+## # of samples are almost same but not equal.
+#makeCustomSampling(equalize_training_dataset_with_InstHardThres, 'InstHardThres')
 
 
 # those methods make # of samples not be equal to each other. So I skipped these methods.
