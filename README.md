@@ -61,4 +61,4 @@ Run the src/createModels.ipynb. Load the appropriate dataset and using whatever 
 Run the src/loadModel.ipynb. You can load the model created in the previous step, and the corresponding dataset. After that, you can plot the ROC&PR curve on test data.
 
 # Result Analysis and Our Poster
-![Poster](Poster.pdf)
+[Poster](Poster.pdf)
