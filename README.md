@@ -1,5 +1,13 @@
 # Traffic_Sign_Classification
 
+## Team Member:
+* David Young-Jae Kim
+* SeungJoon Kim
+* Hao Wu
+* Aman Satya
+
+# Data Source and Some Instructions to Get Started
+
 Dataset source: https://www.kaggle.com/valentynsichkar/traffic-signs-preprocessed
 
 Necessary steps before starting processing data:
@@ -9,13 +17,18 @@ Necessary steps before starting processing data:
 * Download file test.pickle here: https://www.kaggle.com/valentynsichkar/traffic-signs-preprocessed#test.pickle
 * Download file label_names.csv here: https://www.kaggle.com/valentynsichkar/traffic-signs-preprocessed#label_names.csv
 
+# Dependencies
+* imblearn
+* cv2
+* tqdm
+* scikit-learn
+* keras
+* tensorflow
+* numpy
+* matplotlib
+* pickle
 
 # Dataset Generation
-
-## Prerequisites
-* imblearn https://imbalanced-learn.readthedocs.io/en/stable/index.html
-* cv2 https://pypi.org/project/opencv-python/
-* tqdm https://github.com/tqdm/tqdm
 
 ## Main source
 * src/datasets_preparing_org.py
@@ -35,3 +48,17 @@ Then it generates the original dataset, 3 oversampling datasets, and 4 undersamp
 All datasets are normalized and standardized by default.
 
 It could take some time to generate. So if you want to generate specific dataset seperately, you can comment out the last part of the source including "makeCustomSampling" with various dataset manipulation methods.
+
+# Model Creation and Model Loading
+
+## Get Datasets and Models directly online
+For your convenient, all the balanced dataset and models are already created online. You can visit this [link](https://drive.google.com/drive/u/1/folders/1Qjp5h6Ir3IWQXK9jsujPb8MAXGakxYPL) to get all datasets and models.
+
+## Create Model
+Run the src/createModels.ipynb. Load the appropriate dataset and using whatever model you like. We provide a toy dataset which is ToySet_rgb.pickle to help you start.
+
+## Load Model and Get ROC&PR curve
+Run the src/loadModel.ipynb. You can load the model created in the previous step, and the corresponding dataset. After that, you can plot the ROC&PR curve on test data.
+
+# Result Analysis and Our Poster
+![Poster](Poster.pdf)
